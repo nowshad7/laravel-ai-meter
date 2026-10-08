@@ -9,6 +9,7 @@ use Nsd7\AiMeter\Core\Budget\BudgetScope;
 use Nsd7\AiMeter\Core\Budget\Period;
 use Nsd7\AiMeter\Meter;
 use Nsd7\AiMeter\Models\AiMeterCall;
+use Nsd7\AiMeter\Models\AiMeterRun;
 
 class DashboardController extends Controller
 {
@@ -66,6 +67,36 @@ class DashboardController extends Controller
     {
         return view('ai-meter::call', [
             'call' => AiMeterCall::query()->findOrFail($call),
+            'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
+        ]);
+    }
+
+    public function runs(Request $request)
+    {
+        abort_unless(config('ai-meter.features.runs', true), 404);
+
+        $runs = AiMeterRun::query()
+            ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
+            ->orderByDesc('id')
+            ->paginate((int) config('ai-meter.per_page', 25))
+            ->withQueryString();
+
+        return view('ai-meter::runs', [
+            'runs' => $runs,
+            'filters' => $request->query(),
+            'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
+        ]);
+    }
+
+    public function runShow(Request $request, $run)
+    {
+        abort_unless(config('ai-meter.features.runs', true), 404);
+
+        $run = AiMeterRun::query()->findOrFail($run);
+
+        return view('ai-meter::run', [
+            'run' => $run,
+            'calls' => AiMeterCall::query()->where('run_id', $run->run_id)->orderBy('id')->get(),
             'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
         ]);
     }

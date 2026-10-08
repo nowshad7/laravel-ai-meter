@@ -12,6 +12,7 @@ use Nsd7\AiMeter\Core\Contracts\Recorder;
 use Nsd7\AiMeter\Core\Contracts\SpendStore;
 use Nsd7\AiMeter\Core\Data\LlmCall;
 use Nsd7\AiMeter\Core\Data\TokenUsage;
+use Nsd7\AiMeter\Runs\MeterRun;
 
 /**
  * The package's main entry point: compute cost, record calls, and check budgets.
@@ -103,6 +104,25 @@ class Meter
             'model' => $model,
             'usage' => $usage,
         ], $attributes));
+    }
+
+    /**
+     * Begin an agent run: a context that groups calls, tracks aggregates and
+     * enforces per-run caps (the runaway-loop guard).
+     *
+     * @param array{budget?: float, max_tool_calls?: int, max_wall_clock?: int, label?: string, run_id?: string} $options
+     */
+    public function run(BudgetScope $scope, array $options = []): MeterRun
+    {
+        return new MeterRun(
+            meter: $this,
+            scope: $scope,
+            budgetUsd: isset($options['budget']) ? (float) $options['budget'] : null,
+            maxToolCalls: $options['max_tool_calls'] ?? config('ai-meter.runs.max_tool_calls'),
+            maxWallClock: $options['max_wall_clock'] ?? config('ai-meter.runs.max_wall_clock'),
+            label: $options['label'] ?? null,
+            runId: $options['run_id'] ?? null,
+        );
     }
 
     public function spent(BudgetScope $scope, Period $period): float

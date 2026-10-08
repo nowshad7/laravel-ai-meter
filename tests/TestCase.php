@@ -32,6 +32,7 @@ abstract class TestCase extends Orchestra
         });
 
         (require __DIR__ . '/../database/migrations/2024_01_01_000000_create_ai_meter_calls_table.php')->up();
+        (require __DIR__ . '/../database/migrations/2024_01_01_000001_create_ai_meter_runs_table.php')->up();
     }
 
     protected function defineRoutes($router)
