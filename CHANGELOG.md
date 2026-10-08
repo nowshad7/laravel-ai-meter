@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.3.0)
+## Unreleased (0.4.0)
+
+### Added
+- **Agent-facing budget API** (`features.api`): a read-only `GET {prefix}/api/budget` endpoint returning spend-by-period and the status of every configured budget for a scope ("how much budget is left?"), consumable by an SPA, a dashboard, or an AI agent. Backed by the reusable `Meter::budgetReport($scope)`.
+
+## 0.3.0
 
 ### Added
 - **Auto-instrumentation for the Laravel AI SDK** (`adapters.laravel_ai`): opt-in event listener that records every call automatically — no manual `Meter::log()`. Version-tolerant (configurable event class, defensive usage/model extraction) and attributes spend to the authenticated user (or a configured scope resolver).
