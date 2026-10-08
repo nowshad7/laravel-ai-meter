@@ -168,6 +168,46 @@ class Meter
         return $this->check($scope)->remainingUsd();
     }
 
+    /**
+     * A JSON-friendly budget report for a scope — spend by period plus the
+     * status of every configured budget. Consumable by an SPA, a dashboard, or
+     * an AI agent asking "how much budget do I have left?".
+     *
+     * @return array<string, mixed>
+     */
+    public function budgetReport(BudgetScope $scope): array
+    {
+        $guard = $this->guard();
+
+        $budgets = array_map(function (Budget $budget) use ($scope) {
+            $spent = $this->spent($scope, $budget->period);
+            $exceeded = $budget->limitUsd > 0 && $spent >= $budget->limitUsd;
+
+            return [
+                'period' => $budget->period->value,
+                'action' => $budget->action,
+                'limit_usd' => round($budget->limitUsd, 8),
+                'spent_usd' => round($spent, 8),
+                'remaining_usd' => round(max(0.0, $budget->limitUsd - $spent), 8),
+                'used_fraction' => $budget->limitUsd > 0 ? round($spent / $budget->limitUsd, 6) : null,
+                'exceeded' => $exceeded,
+                'allowed' => ! ($exceeded && $budget->blocks()),
+            ];
+        }, $guard->budgetsFor($scope));
+
+        return [
+            'scope' => ['type' => $scope->type, 'id' => $scope->id],
+            'allowed' => $guard->evaluate($scope)->allowed,
+            'spend' => [
+                'day' => round($this->spent($scope, Period::Day), 8),
+                'month' => round($this->spent($scope, Period::Month), 8),
+                'total' => round($this->spent($scope, Period::Total), 8),
+            ],
+            'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
+            'budgets' => $budgets,
+        ];
+    }
+
     public function guard(): BudgetGuard
     {
         return new BudgetGuard($this->spendStore, $this->budgets());

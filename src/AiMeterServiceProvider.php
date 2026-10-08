@@ -45,7 +45,8 @@ class AiMeterServiceProvider extends ServiceProvider
         $router = $this->app['router'];
         $router->aliasMiddleware('ai.budget', EnforceBudget::class);
 
-        if (config('ai-meter.enabled', true) && config('ai-meter.features.dashboard', true)) {
+        if (config('ai-meter.enabled', true)
+            && (config('ai-meter.features.dashboard', true) || config('ai-meter.features.api', false))) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         }
 

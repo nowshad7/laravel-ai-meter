@@ -167,6 +167,36 @@ try {
 Every run shows up under the **Runs** tab with its step/tool-call count, cost
 vs. budget, and a per-call trace.
 
+### Agent-facing budget API
+
+Enable `features.api` to expose a read-only **"how much budget is left?"**
+endpoint — ideal for an SPA, a dashboard, or an **AI agent** deciding whether it
+can afford another step:
+
+```
+GET {prefix}/api/budget                      # the authenticated user's scope
+GET {prefix}/api/budget?scope_type=global
+GET {prefix}/api/budget?scope_type=tenant&scope_id=42
+```
+
+```json
+{
+  "scope": { "type": "user", "id": 7 },
+  "allowed": true,
+  "spend": { "day": 1.2, "month": 10.5, "total": 42.0 },
+  "currency": "USD",
+  "budgets": [
+    { "period": "month", "action": "block", "limit_usd": 50,
+      "spent_usd": 10.5, "remaining_usd": 39.5, "used_fraction": 0.21,
+      "exceeded": false, "allowed": true }
+  ]
+}
+```
+
+It runs behind the same middleware and gate as the dashboard. The same data is
+available in code via `Meter::budgetReport($scope)` — hand it to an MCP tool to
+let an agent check its own budget.
+
 ## Configuration
 
 Key options in `config/ai-meter.php`:
@@ -189,7 +219,8 @@ Prune old records: `php artisan ai-meter:prune`.
 
 - **v0.2 (done)** — agent **runs** with a trace view and `Meter::run()` per-run tool-call & wall-clock caps (runaway-loop guard).
 - **v0.2.x (done)** — Laravel AI SDK auto-instrumentation (event listener) + a `Meter::prismTap()` callback for Prism.
-- **v0.3** — agent-facing budget endpoint + MCP resource ("how much budget is left?"), alert notifications, `ai-meter:update-prices`, exports, Neuron adapter.
+- **v0.4 (done)** — agent-facing budget API (`features.api`, `Meter::budgetReport()`) for "how much budget is left?".
+- **v0.4.x** — alert notifications, budgets dashboard page, `ai-meter:update-prices`, call-log export, Neuron adapter.
 - **v1.0** — docs site, stability.
 - **Later** — a framework-agnostic core + a Symfony bundle.
 
