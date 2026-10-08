@@ -82,6 +82,31 @@ Meter::recordPrism($response, [
 
 Token usage and model are read straight off the Prism response, so cost is computed for you.
 
+### Auto-instrumentation
+
+**Laravel AI SDK** — meter every call automatically, no manual `record()`. Enable the adapter; the package listens to the SDK's end-of-prompt event:
+
+```php
+// config/ai-meter.php
+'adapters' => [
+    'laravel_ai' => [
+        'enabled' => true,
+        // Match your installed version (see `php artisan event:list`):
+        'event'   => 'Laravel\\Ai\\Events\\AgentPrompted',
+        'scope'   => fn () => BudgetScope::user(auth()->id()), // optional; defaults to the auth user
+    ],
+],
+```
+
+It reads usage/model defensively (works across SDK versions) and only wires up when enabled and the event class exists — so it never affects an app that doesn't use it.
+
+**Prism** has no global event hook, so use the ready-made callback with Prism's `->asText()`:
+
+```php
+Prism::text()->using('openai', 'gpt-4o')->withPrompt($prompt)
+    ->asText(Meter::prismTap(['provider' => 'openai', 'scope' => BudgetScope::user(auth()->id())]));
+```
+
 ### Enforce a budget
 
 Config:
@@ -163,8 +188,8 @@ Prune old records: `php artisan ai-meter:prune`.
 ## Roadmap
 
 - **v0.2 (done)** — agent **runs** with a trace view and `Meter::run()` per-run tool-call & wall-clock caps (runaway-loop guard).
-- **v0.2.x** — auto-instrumentation adapters (Prism / Laravel AI SDK / Neuron) so calls are captured with no manual `record()`.
-- **v0.3** — agent-facing budget endpoint + MCP resource ("how much budget is left?"), alert notifications, `ai-meter:update-prices`, exports.
+- **v0.2.x (done)** — Laravel AI SDK auto-instrumentation (event listener) + a `Meter::prismTap()` callback for Prism.
+- **v0.3** — agent-facing budget endpoint + MCP resource ("how much budget is left?"), alert notifications, `ai-meter:update-prices`, exports, Neuron adapter.
 - **v1.0** — docs site, stability.
 - **Later** — a framework-agnostic core + a Symfony bundle.
 

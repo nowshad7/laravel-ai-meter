@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased (0.2.0)
+## Unreleased (0.3.0)
+
+### Added
+- **Auto-instrumentation for the Laravel AI SDK** (`adapters.laravel_ai`): opt-in event listener that records every call automatically — no manual `Meter::log()`. Version-tolerant (configurable event class, defensive usage/model extraction) and attributes spend to the authenticated user (or a configured scope resolver).
+- **`Meter::prismTap()`** — a ready-made callback for Prism's `->asText($callback)`, since Prism has no global event hook.
+- Shared `UsageReader` support class for reading token usage/model from SDK responses.
+
+## 0.2.0
 
 ### Added
 - **Agent runs** (`Meter::run()`): group calls under one run, track step/tool-call/cost aggregates, and view them as a **trace** in the dashboard (Runs tab). New `ai_meter_runs` table (publishable migration) and `features.runs` toggle.
