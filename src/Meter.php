@@ -10,9 +10,11 @@ use Nsd7\AiMeter\Core\Budget\Period;
 use Nsd7\AiMeter\Core\Contracts\PriceProvider;
 use Nsd7\AiMeter\Core\Contracts\Recorder;
 use Nsd7\AiMeter\Core\Contracts\SpendStore;
+use Closure;
 use Nsd7\AiMeter\Core\Data\LlmCall;
 use Nsd7\AiMeter\Core\Data\TokenUsage;
 use Nsd7\AiMeter\Runs\MeterRun;
+use Nsd7\AiMeter\Support\UsageReader;
 
 /**
  * The package's main entry point: compute cost, record calls, and check budgets.
@@ -95,15 +97,34 @@ class Meter
      */
     public function recordPrism(object $response, array $attributes = []): LlmCall
     {
-        $usage = $this->readPrismUsage($response);
-        $model = $attributes['model'] ?? $this->readPath($response, ['meta', 'model']) ?? 'unknown';
-
         return $this->log(array_merge([
             'source' => 'prism',
             'provider' => $attributes['provider'] ?? 'unknown',
-            'model' => $model,
-            'usage' => $usage,
+            'model' => $attributes['model'] ?? UsageReader::model($response) ?? 'unknown',
+            'usage' => UsageReader::usage($response),
         ], $attributes));
+    }
+
+    /**
+     * A ready-made callback for Prism's `->asText($callback)` (and the other
+     * `as*()` methods), which records the response as it comes back:
+     *
+     *   Prism::text()->using('openai', 'gpt-4o')->withPrompt($p)
+     *       ->asText(Meter::prismTap(['provider' => 'openai', 'scope' => $scope]));
+     *
+     * @param array<string, mixed> $attributes
+     */
+    public function prismTap(array $attributes = []): Closure
+    {
+        return function (...$args) use ($attributes) {
+            foreach ($args as $arg) {
+                if (is_object($arg) && (isset($arg->usage) || isset($arg->meta))) {
+                    $this->recordPrism($arg, $attributes);
+
+                    return;
+                }
+            }
+        };
     }
 
     /**
@@ -177,45 +198,5 @@ class Meter
         }
 
         return [null, null];
-    }
-
-    protected function readPrismUsage(object $response): TokenUsage
-    {
-        $usage = $response->usage ?? null;
-
-        if (is_object($usage)) {
-            return new TokenUsage(
-                promptTokens: (int) ($usage->promptTokens ?? $usage->inputTokens ?? 0),
-                completionTokens: (int) ($usage->completionTokens ?? $usage->outputTokens ?? 0),
-                totalTokens: (int) ($usage->totalTokens ?? 0)
-                    ?: (int) ($usage->promptTokens ?? 0) + (int) ($usage->completionTokens ?? 0),
-                cachedTokens: (int) ($usage->cacheReadInputTokens ?? $usage->cachedTokens ?? 0),
-                reasoningTokens: (int) ($usage->thoughtTokens ?? $usage->reasoningTokens ?? 0),
-            );
-        }
-
-        if (is_array($usage)) {
-            return TokenUsage::fromArray($usage);
-        }
-
-        return new TokenUsage();
-    }
-
-    /**
-     * @param array<int, string> $path
-     */
-    protected function readPath(object $object, array $path): mixed
-    {
-        $current = $object;
-
-        foreach ($path as $segment) {
-            if (is_object($current) && isset($current->{$segment})) {
-                $current = $current->{$segment};
-            } else {
-                return null;
-            }
-        }
-
-        return is_scalar($current) ? $current : null;
     }
 }

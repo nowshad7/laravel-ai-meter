@@ -48,6 +48,32 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Auto-instrumentation adapters
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the package listens to the Laravel AI SDK's events and
+    | records each call automatically — no manual Meter::log() needed. The
+    | "event" is the class the SDK dispatches at the end of a prompt/step; it
+    | differs across versions, so override it to match yours (see
+    | `php artisan event:list`). "scope" may be a callable returning a
+    | BudgetScope; by default calls are attributed to the authenticated user.
+    |
+    | Prism has no global event hook — use Meter::prismTap() with Prism's
+    | ->asText($callback) instead (see the README).
+    |
+    */
+
+    'adapters' => [
+        'laravel_ai' => [
+            'enabled' => env('AI_METER_LARAVEL_AI', false),
+            'event' => 'Laravel\\Ai\\Events\\AgentPrompted',
+            'default_provider' => null,
+            'scope' => null,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Recording
     |--------------------------------------------------------------------------
     |

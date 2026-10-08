@@ -4,6 +4,7 @@ namespace Nsd7\AiMeter;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Nsd7\AiMeter\Adapters\LaravelAiListener;
 use Nsd7\AiMeter\Budget\DatabaseSpendStore;
 use Nsd7\AiMeter\Console\PruneCommand;
 use Nsd7\AiMeter\Core\Contracts\PriceProvider;
@@ -48,6 +49,8 @@ class AiMeterServiceProvider extends ServiceProvider
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
         }
 
+        $this->registerAdapters();
+
         if ($this->app->runningInConsole()) {
             $this->commands([PruneCommand::class]);
 
@@ -62,6 +65,23 @@ class AiMeterServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../database/migrations' => database_path('migrations'),
             ], 'ai-meter-migrations');
+        }
+    }
+
+    /**
+     * Wire optional auto-instrumentation adapters when enabled and available.
+     */
+    protected function registerAdapters(): void
+    {
+        if (! config('ai-meter.enabled', true)) {
+            return;
+        }
+
+        $laravelAi = (array) config('ai-meter.adapters.laravel_ai', []);
+        $event = $laravelAi['event'] ?? null;
+
+        if (($laravelAi['enabled'] ?? false) && is_string($event) && class_exists($event)) {
+            $this->app['events']->listen($event, [LaravelAiListener::class, 'handle']);
         }
     }
 
