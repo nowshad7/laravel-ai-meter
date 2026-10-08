@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.0)
+## Unreleased (0.4.1)
+
+### Added
+- **Budget alert notifications** (`alerts`): both `block` and `alert` budgets now fire a `BudgetThresholdReached` event the first time a scope's spend crosses a configurable threshold (default 80% and 100%) within a budget's window — once per threshold per day/month/all-time window, and a jump past several thresholds sends only the highest. A bundled listener delivers it as a mail and/or Slack-webhook notification (`alerts.notify`), or you can listen for the event yourself. Alerting is checked after each recorded call and never breaks recording when a mail server or webhook fails.
+
+## 0.4.0
 
 ### Added
 - **Agent-facing budget API** (`features.api`): a read-only `GET {prefix}/api/budget` endpoint returning spend-by-period and the status of every configured budget for a scope ("how much budget is left?"), consumable by an SPA, a dashboard, or an AI agent. Backed by the reusable `Meter::budgetReport($scope)`.

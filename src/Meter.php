@@ -2,6 +2,7 @@
 
 namespace Nsd7\AiMeter;
 
+use Nsd7\AiMeter\Budget\BudgetAlerter;
 use Nsd7\AiMeter\Core\Budget\Budget;
 use Nsd7\AiMeter\Core\Budget\BudgetDecision;
 use Nsd7\AiMeter\Core\Budget\BudgetGuard;
@@ -15,6 +16,7 @@ use Nsd7\AiMeter\Core\Data\LlmCall;
 use Nsd7\AiMeter\Core\Data\TokenUsage;
 use Nsd7\AiMeter\Runs\MeterRun;
 use Nsd7\AiMeter\Support\UsageReader;
+use Throwable;
 
 /**
  * The package's main entry point: compute cost, record calls, and check budgets.
@@ -25,6 +27,7 @@ class Meter
         protected PriceProvider $prices,
         protected Recorder $recorder,
         protected SpendStore $spendStore,
+        protected ?BudgetAlerter $alerter = null,
     ) {
     }
 
@@ -50,7 +53,28 @@ class Meter
 
         $this->recorder->record($call);
 
+        $this->alert($call);
+
         return $call;
+    }
+
+    /**
+     * Fire threshold alerts for the budgets this call counts towards. Alerting
+     * never breaks recording: failures are reported and swallowed.
+     */
+    protected function alert(LlmCall $call): void
+    {
+        if (! $this->alerter || ! config('ai-meter.alerts.enabled', true)) {
+            return;
+        }
+
+        $scope = $call->scopeType !== null ? new BudgetScope($call->scopeType, $call->scopeId) : null;
+
+        try {
+            $this->alerter->check($scope, $this->budgets());
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /**

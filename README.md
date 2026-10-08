@@ -26,6 +26,7 @@ AI Meter is the only option that **meters and enforces, self-hosted, with a dash
 - 📊 **Dashboard** (Blade + Tailwind, dark mode): spend today / this month / all-time, spend-over-time chart, cost by model & provider, top scopes, and a filterable call log with per-call detail.
 - 🧾 **Cost attribution** — every call priced from a bundled, overridable price book (unknown models use a configurable fallback, never silently $0).
 - 🛑 **Budget enforcement** — spend ceilings per **user / tenant / global**, over **run / day / month / total**, with `block` (HTTP 402) or `alert` actions.
+- 🔔 **Budget alerts** — mail / Slack notifications the moment a scope crosses **80% / 100%** of a budget (configurable thresholds), once per window, or listen for the event yourself.
 - 🔌 **Capture anything** — a reliable `Meter::log()` / `Meter::recordPrism()` API today; deeper auto-instrumentation for Prism, the Laravel AI SDK and Neuron is on the roadmap.
 - 🔐 **Safe by default** — prompt/response storage is optional, redacted (keys, tokens, emails, card-like numbers) and truncated; dashboard behind an auth gate; `noindex`.
 - 🗄️ **Self-hosted** — stores in your database, works on MySQL, PostgreSQL, SQLite and SQL Server. No accounts, no egress.
@@ -133,6 +134,38 @@ if (! $decision->allowed) {
 }
 
 $left = Meter::remaining(BudgetScope::user($id)); // USD remaining, or null
+```
+
+### Budget alerts (80% / 100%)
+
+Both `block` **and** `alert` budgets fire a notification the first time a scope's
+spend crosses a threshold within the budget's window — so you hear about a
+runaway spend as it happens, not after the bill. Point it at an email address
+and/or a Slack incoming-webhook:
+
+```php
+// config/ai-meter.php
+'alerts' => [
+    'enabled'    => true,
+    'thresholds' => [0.8, 1.0],   // alert at 80% and 100% of the limit
+    'notify' => [
+        'mail'  => env('AI_METER_ALERT_MAIL'),           // address or array of addresses
+        'slack' => env('AI_METER_ALERT_SLACK_WEBHOOK'),  // Slack incoming-webhook URL
+    ],
+],
+```
+
+Each threshold alerts **once per window** (a `day` budget re-arms tomorrow, a
+`month` budget next month), and a single jump past several thresholds sends only
+the highest. Prefer your own handling? Leave `notify` empty and listen for the
+event:
+
+```php
+use Nsd7\AiMeter\Events\BudgetThresholdReached;
+
+Event::listen(function (BudgetThresholdReached $e) {
+    // $e->scope, $e->budget, $e->threshold (0.8), $e->spentUsd, $e->exceeded()
+});
 ```
 
 ### Agent runs (trace + runaway-loop guard)
