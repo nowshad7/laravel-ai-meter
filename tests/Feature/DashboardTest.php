@@ -4,6 +4,7 @@ namespace Nsd7\AiMeter\Tests\Feature;
 
 use Illuminate\Support\Facades\Gate;
 use Nsd7\AiMeter\Models\AiMeterCall;
+use Nsd7\AiMeter\Models\AiMeterRun;
 use Nsd7\AiMeter\Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -55,6 +56,39 @@ class DashboardTest extends TestCase
             ->get(route('ai-meter.calls.show', $call->id))
             ->assertOk()
             ->assertSee('gpt-4o');
+    }
+
+    public function test_runs_list_and_detail_render()
+    {
+        $run = AiMeterRun::create([
+            'run_id' => 'run-abc', 'label' => 'nightly agent', 'status' => 'completed',
+            'scope_type' => 'user', 'scope_id' => '1', 'step_count' => 2, 'tool_call_count' => 1,
+            'cost_usd' => 3.5, 'started_at' => now(),
+        ]);
+        AiMeterCall::create([
+            'provider' => 'openai', 'model' => 'gpt-4o', 'cost_usd' => 3.5, 'total_tokens' => 10,
+            'run_id' => 'run-abc', 'created_at' => now(),
+        ]);
+
+        $this->actingAs($this->makeUser())
+            ->get(route('ai-meter.runs'))
+            ->assertOk()
+            ->assertViewIs('ai-meter::runs')
+            ->assertSee('nightly agent');
+
+        $this->actingAs($this->makeUser())
+            ->get(route('ai-meter.runs.show', $run->id))
+            ->assertOk()
+            ->assertSee('gpt-4o');
+    }
+
+    public function test_runs_can_be_disabled()
+    {
+        config(['ai-meter.features.runs' => false]);
+
+        $this->actingAs($this->makeUser())
+            ->get(route('ai-meter.runs'))
+            ->assertNotFound();
     }
 
     public function test_the_gate_can_deny_access()

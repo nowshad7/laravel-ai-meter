@@ -30,13 +30,19 @@
                 <span>AI Meter</span>
             </a>
             <div class="flex items-center gap-1">
-                @php($tabs = ['overview' => 'Overview', 'calls' => 'Calls'])
+                @php
+                    $tabs = ['overview' => 'Overview', 'calls' => 'Calls'];
+                    if (config('ai-meter.features.runs', true)) {
+                        $tabs['runs'] = 'Runs';
+                    }
+                @endphp
                 @foreach ($tabs as $route => $label)
+                    @php($active = request()->routeIs('ai-meter.' . $route) || request()->routeIs('ai-meter.' . $route . '.show'))
                     <a href="{{ route('ai-meter.' . $route) }}"
                        @class([
                            'rounded-lg px-3 py-1.5 text-sm font-medium',
-                           'bg-emerald-600 text-white' => request()->routeIs('ai-meter.' . $route) || ($route === 'calls' && request()->routeIs('ai-meter.calls.show')),
-                           'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' => ! (request()->routeIs('ai-meter.' . $route) || ($route === 'calls' && request()->routeIs('ai-meter.calls.show'))),
+                           'bg-emerald-600 text-white' => $active,
+                           'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800' => ! $active,
                        ])>{{ $label }}</a>
                 @endforeach
                 <button type="button" x-data

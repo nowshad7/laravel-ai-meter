@@ -110,6 +110,38 @@ if (! $decision->allowed) {
 $left = Meter::remaining(BudgetScope::user($id)); // USD remaining, or null
 ```
 
+### Agent runs (trace + runaway-loop guard)
+
+Wrap an agent loop in a run to group its calls, see the whole trace in the
+dashboard, and **stop a runaway loop** before it drains the budget:
+
+```php
+use Nsd7\AiMeter\Facades\Meter;
+use Nsd7\AiMeter\Core\Budget\BudgetScope;
+
+$run = Meter::run(BudgetScope::user(auth()->id()), [
+    'label'          => 'support-agent',
+    'budget'         => 2.00,   // USD for this whole run
+    'max_tool_calls' => 10,     // runaway-loop cap
+    'max_wall_clock' => 120,    // seconds
+]);
+
+try {
+    while ($agent->thinking()) {
+        $run->guard();                 // throws before the next step if over a cap/budget
+        $response = $agent->step();
+        $run->recordPrism($response);  // or $run->record([...]) for tool calls
+    }
+    $run->finish();
+} catch (\Nsd7\AiMeter\Runs\Exceptions\RunLimitExceededException
+       | \Nsd7\AiMeter\Budget\Exceptions\BudgetExceededException $e) {
+    $run->fail($e->getMessage());      // loop stopped safely
+}
+```
+
+Every run shows up under the **Runs** tab with its step/tool-call count, cost
+vs. budget, and a per-call trace.
+
 ## Configuration
 
 Key options in `config/ai-meter.php`:
@@ -130,7 +162,8 @@ Prune old records: `php artisan ai-meter:prune`.
 
 ## Roadmap
 
-- **v0.2** — auto-instrumentation adapters (Prism / Laravel AI SDK / Neuron), agent **runs** with a trace tree, `Meter::run()` with per-run tool-call & wall-clock caps (runaway-loop guard).
+- **v0.2 (done)** — agent **runs** with a trace view and `Meter::run()` per-run tool-call & wall-clock caps (runaway-loop guard).
+- **v0.2.x** — auto-instrumentation adapters (Prism / Laravel AI SDK / Neuron) so calls are captured with no manual `record()`.
 - **v0.3** — agent-facing budget endpoint + MCP resource ("how much budget is left?"), alert notifications, `ai-meter:update-prices`, exports.
 - **v1.0** — docs site, stability.
 - **Later** — a framework-agnostic core + a Symfony bundle.

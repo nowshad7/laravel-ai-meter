@@ -42,6 +42,7 @@ return [
 
     'features' => [
         'dashboard' => true,
+        'runs' => true,
         'api' => false,
     ],
 
@@ -96,6 +97,23 @@ return [
     'budgets' => [
         // ['scope' => 'user',   'period' => 'month', 'limit' => 50,  'action' => 'block'],
         // ['scope' => 'global', 'period' => 'day',   'limit' => 500, 'action' => 'alert'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Runs (agent runs)
+    |--------------------------------------------------------------------------
+    |
+    | Default caps applied to Meter::run() when not overridden per call. These
+    | are the runaway-loop guard: a run that hits a cap throws when guard() is
+    | called. Set a value to null to disable that cap by default.
+    |
+    */
+
+    'runs' => [
+        'table' => 'ai_meter_runs',
+        'max_tool_calls' => 25,
+        'max_wall_clock' => 300,
     ],
 
     /*
