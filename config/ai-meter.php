@@ -107,6 +107,21 @@ return [
         'prices' => [
             // 'openai' => ['my-model' => ['input' => 1, 'output' => 2]],
         ],
+
+        // An app-owned JSON price book (same shape as "prices") that overrides
+        // the bundled table but is itself overridden by "prices" above. Refresh
+        // it with `php artisan ai-meter:update-prices`. Null disables it.
+        'prices_path' => env('AI_METER_PRICES_PATH'),
+
+        // Source for ai-meter:update-prices: a URL or local file returning the
+        // nested price-book JSON. Defaults to this package's maintained book, so
+        // costs can be kept current without upgrading the package.
+        'update' => [
+            'source' => env(
+                'AI_METER_PRICES_SOURCE',
+                'https://raw.githubusercontent.com/nowshad7/laravel-ai-meter/main/resources/prices/pricebook.json'
+            ),
+        ],
     ],
 
     /*
