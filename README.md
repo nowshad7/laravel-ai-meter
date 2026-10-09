@@ -24,7 +24,7 @@ AI Meter is the only option that **meters and enforces, self-hosted, with a dash
 ## Features
 
 - 📊 **Dashboard** (Blade + Tailwind, dark mode): spend today / this month / all-time, spend-over-time chart, cost by model & provider, top scopes, a **budgets page** (every budget's live used-fraction with 80% / 100% markers), and a filterable call log with per-call detail.
-- 🧾 **Cost attribution** — every call priced from a bundled, overridable price book (unknown models use a configurable fallback, never silently $0).
+- 🧾 **Cost attribution** — every call priced from a bundled, overridable price book (unknown models use a configurable fallback, never silently $0), refreshable with `ai-meter:update-prices`.
 - 🛑 **Budget enforcement** — spend ceilings per **user / tenant / global**, over **run / day / month / total**, with `block` (HTTP 402) or `alert` actions.
 - 🔔 **Budget alerts** — mail / Slack notifications the moment a scope crosses **80% / 100%** of a budget (configurable thresholds), once per window, or listen for the event yourself.
 - 🔌 **Capture anything** — a reliable `Meter::log()` / `Meter::recordPrism()` API today; deeper auto-instrumentation for Prism, the Laravel AI SDK and Neuron is on the roadmap.
@@ -242,11 +242,33 @@ Key options in `config/ai-meter.php`:
 | `recording.redact` / `max_io_chars` | `true` / `8000` | Scrub secrets; truncate. |
 | `pricing.currency` / `fx_rate` | `USD` / `null` | Display currency + USD→local conversion. |
 | `pricing.unknown_model` | `{input:1,output:3}` | Fallback price per 1M tokens. |
-| `pricing.prices` | `[]` | Override/extend the bundled price book. |
+| `pricing.prices` | `[]` | Override/extend the bundled price book (wins over everything). |
+| `pricing.prices_path` | `null` | App-owned price-book JSON, loaded above the bundled table. |
+| `pricing.update.source` | package book URL | Source for `ai-meter:update-prices`. |
 | `budgets` | `[]` | Spend ceilings (scope, period, limit, action). |
 | `prune.keep_days` | `90` | Retention for `ai-meter:prune`. |
 
-Prune old records: `php artisan ai-meter:prune`.
+### Commands
+
+```bash
+php artisan ai-meter:prune            # delete call records older than prune.keep_days
+php artisan ai-meter:update-prices    # refresh the price book so token costs don't drift
+```
+
+**Keep prices current without upgrading the package.** `ai-meter:update-prices`
+fetches a price book (the package's maintained one by default, or any
+`--source` URL / file in the same `provider → model → {input, output, cached_input}`
+shape) and merges it into an app-owned file:
+
+```bash
+php artisan ai-meter:update-prices --dry-run           # preview: N new, M changed
+php artisan ai-meter:update-prices --path=storage/app/ai-meter/prices.json
+```
+
+Point `pricing.prices_path` (or `AI_METER_PRICES_SOURCE` / `AI_METER_PRICES_PATH`)
+at that file and it's loaded **above the bundled table** but **below** your
+explicit `pricing.prices` overrides — so a refresh never clobbers your custom
+prices. Use `--replace` to overwrite instead of merge.
 
 ## Roadmap
 

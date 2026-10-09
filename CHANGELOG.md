@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.2)
+## Unreleased (0.4.3)
+
+### Added
+- **`ai-meter:update-prices` command**: refresh the price book from a source (a URL or local JSON file, defaulting to the package's maintained book) into an app-owned file, so token costs stay current without upgrading the package. Merges by default (`--replace` to overwrite), with `--dry-run`, `--source` and `--path` options and a "N new, M changed" summary. A new `pricing.prices_path` is loaded **above** the bundled, install-frozen table but **below** explicit `pricing.prices` overrides, so a refresh never clobbers custom prices.
+
+## 0.4.2
 
 ### Added
 - **Budgets dashboard page** (`/ai-meter/budgets`): a new tab that lists every configured budget with its **live used-fraction**. Global budgets show spend vs. limit directly; per-user / per-tenant budgets show the top spenders of that type in the current window, each as a bar against the limit (so you can see who's closest to tripping it). Alert thresholds (80% / 100%) are drawn as ticks on each bar, and an empty state links to the config. Backed by the same data as `Meter::budgetReport()` / the JSON API.

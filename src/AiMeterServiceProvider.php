@@ -8,6 +8,7 @@ use Nsd7\AiMeter\Adapters\LaravelAiListener;
 use Nsd7\AiMeter\Budget\BudgetAlerter;
 use Nsd7\AiMeter\Budget\DatabaseSpendStore;
 use Nsd7\AiMeter\Console\PruneCommand;
+use Nsd7\AiMeter\Console\UpdatePricesCommand;
 use Nsd7\AiMeter\Core\Contracts\PriceProvider;
 use Nsd7\AiMeter\Core\Contracts\Recorder;
 use Nsd7\AiMeter\Core\Contracts\Redactor;
@@ -61,7 +62,7 @@ class AiMeterServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PruneCommand::class]);
+            $this->commands([PruneCommand::class, UpdatePricesCommand::class]);
 
             $this->publishes([
                 __DIR__ . '/../config/ai-meter.php' => config_path('ai-meter.php'),
@@ -108,7 +109,20 @@ class AiMeterServiceProvider extends ServiceProvider
             }
         }
 
-        // Config overrides/extends the bundled table.
+        // An app-owned override file (e.g. refreshed by ai-meter:update-prices)
+        // sits above the bundled, install-frozen table.
+        $localPath = config('ai-meter.pricing.prices_path');
+
+        if (is_string($localPath) && is_file($localPath)) {
+            $decoded = json_decode((string) file_get_contents($localPath), true);
+
+            if (is_array($decoded)) {
+                unset($decoded['_comment']);
+                $data = array_replace_recursive($data, $decoded);
+            }
+        }
+
+        // Config overrides/extends everything above.
         $data = array_replace_recursive($data, (array) config('ai-meter.pricing.prices', []));
 
         $unknown = config('ai-meter.pricing.unknown_model');
