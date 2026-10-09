@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased (0.4.6)
+## Unreleased (0.4.7)
+
+### Changed
+- **1.0 hardening**: `composer.json` now declares `minimum-stability: stable`, a `homepage`, and a `support` (issues/source) block.
+
+### Tests
+- Added coverage for the `ai-meter:prune` command (retention window, `--days` override, retention disabled) and for display-currency conversion (`pricing.fx_rate` as a numeric rate and as a callable), closing two gaps ahead of 1.0. Suite now at 103 tests.
+
+## 0.4.6
 
 ### Added
 - **Neuron AI auto-instrumentation** (`adapters.neuron`): opt-in event listener that records every Neuron inference automatically — no manual `Meter::log()` — mirroring the Laravel AI adapter. Version-tolerant (configurable event class) with defensive usage/model extraction that also reads `getUsage()` / `getModel()` accessors, attributing spend to the authenticated user (or a configured scope resolver). Dormant until enabled.
