@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.5)
+## Unreleased (0.4.6)
+
+### Added
+- **Neuron AI auto-instrumentation** (`adapters.neuron`): opt-in event listener that records every Neuron inference automatically — no manual `Meter::log()` — mirroring the Laravel AI adapter. Version-tolerant (configurable event class) with defensive usage/model extraction that also reads `getUsage()` / `getModel()` accessors, attributing spend to the authenticated user (or a configured scope resolver). Dormant until enabled.
+
+## 0.4.5
 
 ### Added
 - **`CacheSpendStore`** (`spend_store.driver=cache`): a counter-based `SpendStore` that increments a cache (e.g. Redis) counter per scope and period window as calls are recorded, so budget "spend so far" reads are O(1) GETs instead of a per-request `SUM` of the calls table — for high-volume apps enforcing budgets on every request. Amounts are stored as integer 1e-8-USD units (matching the 8-decimal cost column); day/month counters expire with their window; counters reflect spend recorded after the store became active. The default `database` driver is unchanged.

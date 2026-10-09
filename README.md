@@ -27,7 +27,7 @@ AI Meter is the only option that **meters and enforces, self-hosted, with a dash
 - 🧾 **Cost attribution** — every call priced from a bundled, overridable price book (unknown models use a configurable fallback, never silently $0), refreshable with `ai-meter:update-prices`.
 - 🛑 **Budget enforcement** — spend ceilings per **user / tenant / global**, over **run / day / month / total**, with `block` (HTTP 402) or `alert` actions.
 - 🔔 **Budget alerts** — mail / Slack notifications the moment a scope crosses **80% / 100%** of a budget (configurable thresholds), once per window, or listen for the event yourself.
-- 🔌 **Capture anything** — a reliable `Meter::log()` / `Meter::recordPrism()` API today; deeper auto-instrumentation for Prism, the Laravel AI SDK and Neuron is on the roadmap.
+- 🔌 **Capture anything** — a reliable `Meter::log()` / `Meter::recordPrism()` API, plus opt-in auto-instrumentation for the Laravel AI SDK, Neuron AI, and Prism (`Meter::prismTap()`).
 - 🔐 **Safe by default** — prompt/response storage is optional, redacted (keys, tokens, emails, card-like numbers) and truncated; dashboard behind an auth gate; `noindex`.
 - 🗄️ **Self-hosted** — stores in your database, works on MySQL, PostgreSQL, SQLite and SQL Server. No accounts, no egress.
 - ⚡ **Scales to every request** — enforce budgets off per-request Redis counters (`CacheSpendStore`) instead of SUM-ing the calls table.
@@ -101,6 +101,24 @@ Token usage and model are read straight off the Prism response, so cost is compu
 ```
 
 It reads usage/model defensively (works across SDK versions) and only wires up when enabled and the event class exists — so it never affects an app that doesn't use it.
+
+**Neuron AI** — same idea: enable the adapter and it records each inference by listening to the event Neuron dispatches when a call completes.
+
+```php
+// config/ai-meter.php
+'adapters' => [
+    'neuron' => [
+        'enabled' => true,
+        // Match your installed version:
+        'event'   => 'NeuronAI\\Observability\\Events\\InferenceStop',
+        'scope'   => fn () => BudgetScope::user(auth()->id()), // optional; defaults to the auth user
+    ],
+],
+```
+
+Usage/model are read off the event's message/response defensively (including
+`getUsage()` / `getModel()` accessors), so it keeps working across Neuron
+versions and stays dormant until enabled.
 
 **Prism** has no global event hook, so use the ready-made callback with Prism's `->asText()`:
 
@@ -309,7 +327,7 @@ prices. Use `--replace` to overwrite instead of merge.
 - **v0.2 (done)** — agent **runs** with a trace view and `Meter::run()` per-run tool-call & wall-clock caps (runaway-loop guard).
 - **v0.2.x (done)** — Laravel AI SDK auto-instrumentation (event listener) + a `Meter::prismTap()` callback for Prism.
 - **v0.4 (done)** — agent-facing budget API (`features.api`, `Meter::budgetReport()`) for "how much budget is left?".
-- **v0.4.x** — alert notifications, budgets dashboard page, `ai-meter:update-prices`, call-log export, Neuron adapter.
+- **v0.4.x (done)** — alert notifications, budgets dashboard page, `ai-meter:update-prices`, call-log export, `CacheSpendStore`, Neuron adapter.
 - **v1.0** — docs site, stability.
 - **Later** — a framework-agnostic core + a Symfony bundle.
 
