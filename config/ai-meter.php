@@ -116,13 +116,43 @@ return [
     |
     | Spend ceilings per scope type ("user", "tenant", "global") over a period
     | ("run", "day", "month", "total"). action "block" stops the request via the
-    | ai.budget middleware / Meter::check(); "alert" only flags it.
+    | ai.budget middleware / Meter::check(); "alert" only flags it. Either kind
+    | sends threshold alerts (see "alerts" below).
     |
     */
 
     'budgets' => [
         // ['scope' => 'user',   'period' => 'month', 'limit' => 50,  'action' => 'block'],
         // ['scope' => 'global', 'period' => 'day',   'limit' => 500, 'action' => 'alert'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Budget alerts
+    |--------------------------------------------------------------------------
+    |
+    | After each recorded call, the budgets it counts towards are checked. The
+    | first time a scope's spend reaches a threshold (a fraction of the limit)
+    | within a budget's window, a BudgetThresholdReached event is dispatched —
+    | once per threshold per day/month/all-time window. Markers are kept in
+    | "cache_store" (null = default store).
+    |
+    | "notify" sends that event as a notification: "mail" is an address (or a
+    | list), "slack" a Slack incoming-webhook URL. Leave both empty and listen
+    | to the event yourself for custom handling. "notification" lets you swap
+    | the notification class (it receives the event in its constructor).
+    |
+    */
+
+    'alerts' => [
+        'enabled' => env('AI_METER_ALERTS', true),
+        'thresholds' => [0.8, 1.0],
+        'cache_store' => null,
+        'notify' => [
+            'mail' => env('AI_METER_ALERT_MAIL'),
+            'slack' => env('AI_METER_ALERT_SLACK_WEBHOOK'),
+        ],
+        'notification' => \Nsd7\AiMeter\Notifications\BudgetAlert::class,
     ],
 
     /*

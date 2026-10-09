@@ -5,6 +5,7 @@ namespace Nsd7\AiMeter;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Nsd7\AiMeter\Adapters\LaravelAiListener;
+use Nsd7\AiMeter\Budget\BudgetAlerter;
 use Nsd7\AiMeter\Budget\DatabaseSpendStore;
 use Nsd7\AiMeter\Console\PruneCommand;
 use Nsd7\AiMeter\Core\Contracts\PriceProvider;
@@ -13,7 +14,9 @@ use Nsd7\AiMeter\Core\Contracts\Redactor;
 use Nsd7\AiMeter\Core\Contracts\SpendStore;
 use Nsd7\AiMeter\Core\Pricing\ModelPrice;
 use Nsd7\AiMeter\Core\Pricing\PriceBook;
+use Nsd7\AiMeter\Events\BudgetThresholdReached;
 use Nsd7\AiMeter\Http\Middleware\EnforceBudget;
+use Nsd7\AiMeter\Listeners\SendBudgetAlertNotification;
 use Nsd7\AiMeter\Recording\DatabaseRecorder;
 use Nsd7\AiMeter\Recording\Redaction\DefaultRedactor;
 
@@ -32,6 +35,7 @@ class AiMeterServiceProvider extends ServiceProvider
             $app->make(PriceProvider::class),
             $app->make(Recorder::class),
             $app->make(SpendStore::class),
+            new BudgetAlerter($app->make(SpendStore::class), $app['events'], $app['cache']),
         ));
     }
 
@@ -51,6 +55,10 @@ class AiMeterServiceProvider extends ServiceProvider
         }
 
         $this->registerAdapters();
+
+        if (config('ai-meter.alerts.enabled', true)) {
+            $this->app['events']->listen(BudgetThresholdReached::class, [SendBudgetAlertNotification::class, 'handle']);
+        }
 
         if ($this->app->runningInConsole()) {
             $this->commands([PruneCommand::class]);
