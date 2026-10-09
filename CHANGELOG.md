@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.1)
+## Unreleased (0.4.2)
+
+### Added
+- **Budgets dashboard page** (`/ai-meter/budgets`): a new tab that lists every configured budget with its **live used-fraction**. Global budgets show spend vs. limit directly; per-user / per-tenant budgets show the top spenders of that type in the current window, each as a bar against the limit (so you can see who's closest to tripping it). Alert thresholds (80% / 100%) are drawn as ticks on each bar, and an empty state links to the config. Backed by the same data as `Meter::budgetReport()` / the JSON API.
+
+## 0.4.1
 
 ### Added
 - **Budget alert notifications** (`alerts`): both `block` and `alert` budgets now fire a `BudgetThresholdReached` event the first time a scope's spend crosses a configurable threshold (default 80% and 100%) within a budget's window — once per threshold per day/month/all-time window, and a jump past several thresholds sends only the highest. A bundled listener delivers it as a mail and/or Slack-webhook notification (`alerts.notify`), or you can listen for the event yourself. Alerting is checked after each recorded call and never breaks recording when a mail server or webhook fails.
