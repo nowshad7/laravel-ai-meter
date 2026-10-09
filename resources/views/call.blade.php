@@ -1,10 +1,10 @@
 @extends('ai-meter::layouts.app')
 @section('title', __('ai-meter::messages.call_detail'))
+@section('page_title', __('ai-meter::messages.call_detail') . ' #' . $call->id)
 
 @php
     $fmt = fn ($v) => '$' . number_format((float) $v, 8);
     $dateFormat = config('ai-meter.date_format', 'Y-m-d H:i:s');
-    $card = 'rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900';
     $rows = [
         'Provider' => $call->provider, 'Model' => $call->model, 'Operation' => $call->operation,
         'Status' => $call->status, 'Source' => $call->source,
@@ -18,39 +18,41 @@
     ];
 @endphp
 
-@section('content')
-    <div class="mb-6 flex items-center gap-3">
-        <a href="{{ route('ai-meter.calls') }}" class="text-sm text-emerald-600 hover:underline dark:text-emerald-400">← {{ __('ai-meter::messages.calls') }}</a>
-        <h1 class="text-2xl font-bold tracking-tight">{{ __('ai-meter::messages.call_detail') }} #{{ $call->id }}</h1>
-    </div>
+@section('actions')
+    <a href="{{ route('ai-meter.calls') }}" class="alm-btn-ghost">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        {{ __('ai-meter::messages.calls') }}
+    </a>
+@endsection
 
+@section('content')
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div class="{{ $card }}">
+        <div class="alm-card-p">
             <dl class="divide-y divide-slate-100 text-sm dark:divide-slate-800">
                 @foreach ($rows as $label => $value)
-                    <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500 dark:text-slate-400">{{ $label }}</dt><dd class="text-right font-medium">{{ $value }}</dd></div>
+                    <div class="flex justify-between gap-4 py-2.5"><dt class="text-slate-500 dark:text-slate-400">{{ $label }}</dt><dd class="text-right font-semibold">{{ $value }}</dd></div>
                 @endforeach
             </dl>
         </div>
         <div class="space-y-6">
             @if ($call->error)
-                <div class="{{ $card }} border-rose-200 dark:border-rose-500/30">
+                <div class="alm-card-p border-rose-200 dark:border-rose-500/30">
                     <h2 class="mb-2 text-sm font-semibold text-rose-600 dark:text-rose-400">{{ __('ai-meter::messages.error') }}</h2>
                     <pre class="overflow-auto text-xs">{{ $call->error }}</pre>
                 </div>
             @endif
             @foreach (['input' => 'prompt', 'output' => 'response'] as $field => $key)
                 @if ($call->{$field})
-                    <div class="{{ $card }}">
-                        <h2 class="mb-2 text-sm font-semibold">{{ __('ai-meter::messages.' . $key) }}</h2>
-                        <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-800 dark:bg-slate-950">{{ $call->{$field} }}</pre>
+                    <div class="alm-card-p">
+                        <h2 class="mb-3 text-sm font-semibold">{{ __('ai-meter::messages.' . $key) }}</h2>
+                        <pre class="max-h-72 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs dark:border-slate-800 dark:bg-slate-950">{{ $call->{$field} }}</pre>
                     </div>
                 @endif
             @endforeach
             @if ($call->properties)
-                <div class="{{ $card }}">
-                    <h2 class="mb-2 text-sm font-semibold">{{ __('ai-meter::messages.properties') }}</h2>
-                    <pre class="max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-800 dark:bg-slate-950">{{ json_encode($call->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                <div class="alm-card-p">
+                    <h2 class="mb-3 text-sm font-semibold">{{ __('ai-meter::messages.properties') }}</h2>
+                    <pre class="max-h-72 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs dark:border-slate-800 dark:bg-slate-950">{{ json_encode($call->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
                 </div>
             @endif
         </div>

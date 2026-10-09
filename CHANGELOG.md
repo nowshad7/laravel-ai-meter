@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased (0.6.0)
+
+### Changed
+- **Redesigned dashboard UI** — a modern app shell: a left sidebar with grouped navigation (Monitor / Govern) and icons, a sticky header with per-page actions, the Inter typeface, refined cards, stat tiles with icon chips, a gradient spend chart, horizontal cost-by-model/provider bars, and a polished light/dark theme. No behaviour or route changes.
+
 ## 0.5.0
 
 ### Added
