@@ -7,6 +7,8 @@
 [![Tests](https://github.com/nowshad7/laravel-ai-meter/actions/workflows/tests.yml/badge.svg)](https://github.com/nowshad7/laravel-ai-meter/actions/workflows/tests.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+📖 **[Documentation](https://nowshad7.github.io/laravel-ai-meter/)** · [Changelog](CHANGELOG.md)
+
 ---
 
 ## Why this exists
