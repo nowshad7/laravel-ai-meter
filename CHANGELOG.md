@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased (0.5.0)
+## 0.5.0
 
 ### Added
-- **Documentation site** (VitePress, under `docs/`): a structured guide — getting started, configuration reference, recording calls, auto-instrumentation, budgets & alerts, agent runs, dashboard, and commands — with a GitHub Pages deploy workflow. Published at https://nowshad7.github.io/laravel-ai-meter/ (enable GitHub Pages → "GitHub Actions" in the repo settings).
+- **Documentation site** (VitePress, under `docs/`): a structured guide — getting started, configuration reference, recording calls, auto-instrumentation, budgets & alerts, agent runs, dashboard, and commands — with a GitHub Pages deploy workflow. Published at https://nowshad7.github.io/laravel-ai-meter/ (enable GitHub Pages → "GitHub Actions" in the repo settings once to publish).
 
 ## 0.4.8
 
