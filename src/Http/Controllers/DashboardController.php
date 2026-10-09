@@ -5,6 +5,7 @@ namespace Nsd7\AiMeter\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Routing\Controller;
+use Nsd7\AiMeter\Core\Budget\Budget;
 use Nsd7\AiMeter\Core\Budget\BudgetScope;
 use Nsd7\AiMeter\Core\Budget\Period;
 use Nsd7\AiMeter\Meter;
@@ -33,6 +34,51 @@ class DashboardController extends Controller
             'byProvider' => $this->topBy('provider', 8),
             'topScopes' => $this->topScopes(8),
             'globalBudget' => $this->meter->check(BudgetScope::global()),
+            'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
+        ]);
+    }
+
+    public function budgets(Request $request)
+    {
+        $thresholds = array_values(array_filter(
+            array_map('floatval', (array) config('ai-meter.alerts.thresholds', [0.8, 1.0])),
+            fn ($t) => $t > 0
+        ));
+        sort($thresholds);
+
+        $budgets = array_map(function (Budget $budget) {
+            $row = [
+                'scope_type' => $budget->scopeType,
+                'period' => $budget->period,
+                'limit' => $budget->limitUsd,
+                'action' => $budget->action,
+                'global' => null,
+                'scopes' => [],
+            ];
+
+            if ($budget->period === Period::Run) {
+                return $row; // per-run ceiling, enforced by MeterRun — no time window.
+            }
+
+            if ($budget->scopeType === 'global') {
+                $spent = $this->meter->spent(BudgetScope::global(), $budget->period);
+                $row['global'] = [
+                    'spent' => $spent,
+                    'used' => $budget->limitUsd > 0 ? $spent / $budget->limitUsd : null,
+                ];
+
+                return $row;
+            }
+
+            $row['scopes'] = $this->topScopesForBudget($budget, 5);
+
+            return $row;
+        }, $this->meter->budgets());
+
+        return view('ai-meter::budgets', [
+            'budgets' => $budgets,
+            'thresholds' => $thresholds,
+            'alertsEnabled' => (bool) config('ai-meter.alerts.enabled', true),
             'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
         ]);
     }
@@ -164,6 +210,33 @@ class DashboardController extends Controller
             ->map(fn ($r) => [
                 'label' => $r->scope_type . ($r->scope_id !== null ? ':' . $r->scope_id : ''),
                 'total' => round((float) $r->total, 6),
+            ])
+            ->all();
+    }
+
+    /**
+     * The highest-spending scopes of a budget's type within its current window,
+     * each with its used-fraction against the limit — the live view of who is
+     * closest to tripping the budget.
+     *
+     * @return array<int, array{id: ?string, spent: float, used: ?float}>
+     */
+    protected function topScopesForBudget(Budget $budget, int $limit): array
+    {
+        $start = $budget->period->windowStart(Carbon::now()->toImmutable());
+
+        return AiMeterCall::query()
+            ->where('scope_type', $budget->scopeType)
+            ->when($start, fn ($q) => $q->where('created_at', '>=', $start->format('Y-m-d H:i:s')))
+            ->selectRaw('scope_id, sum(cost_usd) as total')
+            ->groupBy('scope_id')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($r) => [
+                'id' => $r->scope_id !== null ? (string) $r->scope_id : null,
+                'spent' => round((float) $r->total, 8),
+                'used' => $budget->limitUsd > 0 ? (float) $r->total / $budget->limitUsd : null,
             ])
             ->all();
     }

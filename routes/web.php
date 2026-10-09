@@ -13,6 +13,7 @@ Route::group([
 ], function () {
     if (config('ai-meter.features.dashboard', true)) {
         Route::get('/', [DashboardController::class, 'overview'])->name('overview');
+        Route::get('/budgets', [DashboardController::class, 'budgets'])->name('budgets');
         Route::get('/calls', [DashboardController::class, 'calls'])->name('calls');
         Route::get('/calls/{call}', [DashboardController::class, 'show'])->whereNumber('call')->name('calls.show');
         Route::get('/runs', [DashboardController::class, 'runs'])->name('runs');

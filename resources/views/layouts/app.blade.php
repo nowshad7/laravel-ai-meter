@@ -31,9 +31,9 @@
             </a>
             <div class="flex items-center gap-1">
                 @php
-                    $tabs = ['overview' => 'Overview', 'calls' => 'Calls'];
+                    $tabs = ['overview' => __('ai-meter::messages.overview'), 'budgets' => __('ai-meter::messages.budgets'), 'calls' => __('ai-meter::messages.calls')];
                     if (config('ai-meter.features.runs', true)) {
-                        $tabs['runs'] = 'Runs';
+                        $tabs['runs'] = __('ai-meter::messages.runs');
                     }
                 @endphp
                 @foreach ($tabs as $route => $label)

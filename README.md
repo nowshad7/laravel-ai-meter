@@ -23,7 +23,7 @@ AI Meter is the only option that **meters and enforces, self-hosted, with a dash
 
 ## Features
 
-- 📊 **Dashboard** (Blade + Tailwind, dark mode): spend today / this month / all-time, spend-over-time chart, cost by model & provider, top scopes, and a filterable call log with per-call detail.
+- 📊 **Dashboard** (Blade + Tailwind, dark mode): spend today / this month / all-time, spend-over-time chart, cost by model & provider, top scopes, a **budgets page** (every budget's live used-fraction with 80% / 100% markers), and a filterable call log with per-call detail.
 - 🧾 **Cost attribution** — every call priced from a bundled, overridable price book (unknown models use a configurable fallback, never silently $0).
 - 🛑 **Budget enforcement** — spend ceilings per **user / tenant / global**, over **run / day / month / total**, with `block` (HTTP 402) or `alert` actions.
 - 🔔 **Budget alerts** — mail / Slack notifications the moment a scope crosses **80% / 100%** of a budget (configurable thresholds), once per window, or listen for the event yourself.
