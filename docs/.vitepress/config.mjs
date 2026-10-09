@@ -9,6 +9,7 @@ export default defineConfig({
   cleanUrls: true,
   head: [['meta', { name: 'theme-color', content: '#10b981' }]],
   themeConfig: {
+    logo: '/logo.svg',
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Changelog', link: 'https://github.com/nowshad7/laravel-ai-meter/blob/main/CHANGELOG.md' },

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'tagline' => 'Metering & budgets',
+    'monitor' => 'Monitor',
+    'govern' => 'Govern',
     'overview' => 'Overview',
     'calls' => 'Calls',
     'runs' => 'Runs',
