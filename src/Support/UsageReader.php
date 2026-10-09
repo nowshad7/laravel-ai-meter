@@ -15,6 +15,10 @@ class UsageReader
     {
         $usage = $response->usage ?? null;
 
+        if ($usage === null && method_exists($response, 'getUsage')) {
+            $usage = $response->getUsage();
+        }
+
         if (is_object($usage)) {
             $prompt = (int) ($usage->promptTokens ?? $usage->inputTokens ?? 0);
             $completion = (int) ($usage->completionTokens ?? $usage->outputTokens ?? 0);
@@ -40,7 +44,12 @@ class UsageReader
     {
         $model = $response->model
             ?? ($response->meta->model ?? null)
-            ?? ($response->meta->model_id ?? null);
+            ?? ($response->meta->model_id ?? null)
+            ?? ($response->model_id ?? null);
+
+        if ($model === null && method_exists($response, 'getModel')) {
+            $model = $response->getModel();
+        }
 
         return is_scalar($model) ? (string) $model : null;
     }
@@ -51,7 +60,7 @@ class UsageReader
      */
     public static function responseFrom(object $event): object
     {
-        foreach (['response', 'agentResponse', 'result'] as $property) {
+        foreach (['response', 'agentResponse', 'result', 'message'] as $property) {
             if (isset($event->{$property}) && is_object($event->{$property})) {
                 return $event->{$property};
             }

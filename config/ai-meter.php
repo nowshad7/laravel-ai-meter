@@ -70,6 +70,17 @@ return [
             'default_provider' => null,
             'scope' => null,
         ],
+
+        // Neuron AI: records each inference by listening to the event Neuron
+        // dispatches when a call completes. The class differs across versions,
+        // so override "event" to match yours. "scope" may be a callable
+        // returning a BudgetScope; by default calls go to the auth user.
+        'neuron' => [
+            'enabled' => env('AI_METER_NEURON', false),
+            'event' => 'NeuronAI\\Observability\\Events\\InferenceStop',
+            'default_provider' => null,
+            'scope' => null,
+        ],
     ],
 
     /*

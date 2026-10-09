@@ -5,6 +5,7 @@ namespace Nsd7\AiMeter;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Nsd7\AiMeter\Adapters\LaravelAiListener;
+use Nsd7\AiMeter\Adapters\NeuronListener;
 use Nsd7\AiMeter\Budget\BudgetAlerter;
 use Nsd7\AiMeter\Budget\CacheSpendStore;
 use Nsd7\AiMeter\Budget\DatabaseSpendStore;
@@ -95,11 +96,21 @@ class AiMeterServiceProvider extends ServiceProvider
             return;
         }
 
-        $laravelAi = (array) config('ai-meter.adapters.laravel_ai', []);
-        $event = $laravelAi['event'] ?? null;
+        $this->listenAdapter('laravel_ai', LaravelAiListener::class);
+        $this->listenAdapter('neuron', NeuronListener::class);
+    }
 
-        if (($laravelAi['enabled'] ?? false) && is_string($event) && class_exists($event)) {
-            $this->app['events']->listen($event, [LaravelAiListener::class, 'handle']);
+    /**
+     * Register an auto-instrumentation listener when its adapter is enabled and
+     * its configured event class exists.
+     */
+    protected function listenAdapter(string $key, string $listener): void
+    {
+        $config = (array) config("ai-meter.adapters.{$key}", []);
+        $event = $config['event'] ?? null;
+
+        if (($config['enabled'] ?? false) && is_string($event) && class_exists($event)) {
+            $this->app['events']->listen($event, [$listener, 'handle']);
         }
     }
 
