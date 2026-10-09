@@ -32,6 +32,26 @@ AI Meter is the only option that **meters and enforces, self-hosted, with a dash
 - 🗄️ **Self-hosted** — stores in your database, works on MySQL, PostgreSQL, SQLite and SQL Server. No accounts, no egress.
 - ⚡ **Scales to every request** — enforce budgets off per-request Redis counters (`CacheSpendStore`) instead of SUM-ing the calls table.
 
+## Screenshots
+
+The self-hosted dashboard (Blade + Tailwind, light & dark):
+
+**Overview** — spend today / this month / all-time, spend-over-time, and cost by model, provider & scope:
+
+![AI Meter overview dashboard](art/screenshots/overview.png)
+
+**Budgets** — every configured budget's live used-fraction, with the alert thresholds marked and over-limit scopes in red:
+
+![AI Meter budgets page](art/screenshots/budgets.png)
+
+**Calls** — a filterable call log with CSV / JSON export and per-call detail:
+
+![AI Meter call log](art/screenshots/calls.png)
+
+**Run trace** — group an agent's calls under a run and see the whole trace, step by step:
+
+![AI Meter run trace](art/screenshots/run.png)
+
 ## Requirements
 
 - PHP `^8.1`
