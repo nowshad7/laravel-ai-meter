@@ -3,7 +3,10 @@ layout: home
 hero:
   name: Laravel AI Meter
   text: Meter & govern your AI spend
-  tagline: Trace every LLM / agent call, attribute token cost to a user or tenant, see it in a built-in dashboard, and block runaway spend before it happens — all in your own database, no external service.
+  tagline: Trace every LLM / agent call, attribute token cost to a user or tenant, watch it in a built-in dashboard, and block runaway spend before it happens — self-hosted, no external service.
+  image:
+    src: /logo.svg
+    alt: AI Meter
   actions:
     - theme: brand
       text: Get started
