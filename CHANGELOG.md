@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.4)
+## Unreleased (0.4.5)
+
+### Added
+- **`CacheSpendStore`** (`spend_store.driver=cache`): a counter-based `SpendStore` that increments a cache (e.g. Redis) counter per scope and period window as calls are recorded, so budget "spend so far" reads are O(1) GETs instead of a per-request `SUM` of the calls table — for high-volume apps enforcing budgets on every request. Amounts are stored as integer 1e-8-USD units (matching the 8-decimal cost column); day/month counters expire with their window; counters reflect spend recorded after the store became active. The default `database` driver is unchanged.
+
+## 0.4.4
 
 ### Added
 - **Call-log export** (CSV / JSON): the dashboard **Calls** page gains CSV / JSON download buttons that export exactly what the current filters show, and a new **`ai-meter:export`** command does the same on the CLI (to a file or stdout) with `--provider` / `--model` / `--status` / `--scope-type` / `--scope-id` / `--since` / `--until` filters. Metadata columns are always included; prompt/response text and `properties` are added only with `--with-io` (or `?io=1`). Exports stream row-by-row, so large call logs stay within memory. Backed by a shared `CallLogExporter` that the Calls listing now reuses for its filtering.

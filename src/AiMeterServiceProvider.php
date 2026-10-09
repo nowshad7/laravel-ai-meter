@@ -6,6 +6,7 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Nsd7\AiMeter\Adapters\LaravelAiListener;
 use Nsd7\AiMeter\Budget\BudgetAlerter;
+use Nsd7\AiMeter\Budget\CacheSpendStore;
 use Nsd7\AiMeter\Budget\DatabaseSpendStore;
 use Nsd7\AiMeter\Console\ExportCallsCommand;
 use Nsd7\AiMeter\Console\PruneCommand;
@@ -31,7 +32,13 @@ class AiMeterServiceProvider extends ServiceProvider
         $this->app->singleton(Redactor::class, DefaultRedactor::class);
         $this->app->singleton(PriceProvider::class, fn () => $this->makePriceBook());
         $this->app->singleton(Recorder::class, fn ($app) => new DatabaseRecorder($app->make(Redactor::class)));
-        $this->app->singleton(SpendStore::class, DatabaseSpendStore::class);
+        $this->app->singleton(SpendStore::class, function ($app) {
+            if (config('ai-meter.spend_store.driver', 'database') === 'cache') {
+                return new CacheSpendStore($app['cache']);
+            }
+
+            return new DatabaseSpendStore();
+        });
 
         $this->app->singleton(Meter::class, fn ($app) => new Meter(
             $app->make(PriceProvider::class),

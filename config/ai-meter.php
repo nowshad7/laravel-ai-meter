@@ -189,6 +189,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Spend store
+    |--------------------------------------------------------------------------
+    |
+    | How budget "spend so far" is computed. "database" (default) SUMs the
+    | ai_meter_calls table per request — exact, zero setup. "cache" keeps Redis
+    | (or any cache) counters incremented as calls are recorded, so reads are
+    | O(1) — ideal for high-volume apps enforcing budgets on every request.
+    |
+    | The cache counters reflect spend recorded *after* the store became active
+    | (they are not backfilled from existing rows). "cache_store" picks the
+    | cache store (null = default); "prefix" namespaces the counter keys.
+    |
+    */
+
+    'spend_store' => [
+        'driver' => env('AI_METER_SPEND_STORE', 'database'),
+        'cache_store' => env('AI_METER_SPEND_CACHE_STORE'),
+        'prefix' => 'ai-meter:spend',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Scope resolution
     |--------------------------------------------------------------------------
     |

@@ -9,6 +9,7 @@ use Nsd7\AiMeter\Core\Budget\BudgetGuard;
 use Nsd7\AiMeter\Core\Budget\BudgetScope;
 use Nsd7\AiMeter\Core\Budget\Period;
 use Nsd7\AiMeter\Core\Contracts\PriceProvider;
+use Nsd7\AiMeter\Core\Contracts\RecordsSpend;
 use Nsd7\AiMeter\Core\Contracts\Recorder;
 use Nsd7\AiMeter\Core\Contracts\SpendStore;
 use Closure;
@@ -53,9 +54,29 @@ class Meter
 
         $this->recorder->record($call);
 
+        $this->countSpend($call);
         $this->alert($call);
 
         return $call;
+    }
+
+    /**
+     * Feed a counter-based spend store (if that's what's configured) the cost
+     * of this call so its running totals stay current. Never breaks recording.
+     */
+    protected function countSpend(LlmCall $call): void
+    {
+        if (! $this->spendStore instanceof RecordsSpend) {
+            return;
+        }
+
+        $scope = $call->scopeType !== null ? new BudgetScope($call->scopeType, $call->scopeId) : null;
+
+        try {
+            $this->spendStore->addSpend($scope, $call->costUsd ?? 0.0);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /**

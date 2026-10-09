@@ -30,6 +30,7 @@ AI Meter is the only option that **meters and enforces, self-hosted, with a dash
 - 🔌 **Capture anything** — a reliable `Meter::log()` / `Meter::recordPrism()` API today; deeper auto-instrumentation for Prism, the Laravel AI SDK and Neuron is on the roadmap.
 - 🔐 **Safe by default** — prompt/response storage is optional, redacted (keys, tokens, emails, card-like numbers) and truncated; dashboard behind an auth gate; `noindex`.
 - 🗄️ **Self-hosted** — stores in your database, works on MySQL, PostgreSQL, SQLite and SQL Server. No accounts, no egress.
+- ⚡ **Scales to every request** — enforce budgets off per-request Redis counters (`CacheSpendStore`) instead of SUM-ing the calls table.
 
 ## Requirements
 
@@ -246,7 +247,25 @@ Key options in `config/ai-meter.php`:
 | `pricing.prices_path` | `null` | App-owned price-book JSON, loaded above the bundled table. |
 | `pricing.update.source` | package book URL | Source for `ai-meter:update-prices`. |
 | `budgets` | `[]` | Spend ceilings (scope, period, limit, action). |
+| `spend_store.driver` | `database` | `database` (SUM per request) or `cache` (Redis counters). |
 | `prune.keep_days` | `90` | Retention for `ai-meter:prune`. |
+
+### High-volume budget enforcement
+
+By default, "how much has this scope spent?" is a `SUM` of the calls table on
+each check — exact and zero-setup. Apps enforcing budgets on *every* request
+can switch to **cache counters** instead:
+
+```php
+// config/ai-meter.php
+'spend_store' => ['driver' => 'cache'],   // or AI_METER_SPEND_STORE=cache
+```
+
+The `cache` driver (`CacheSpendStore`) increments a Redis (or any cache)
+counter per scope and period window as each call is recorded, so budget reads
+are O(1) GETs. Counters reflect spend recorded **after** the driver is enabled
+(they aren't backfilled); day/month counters expire with their window. Keep the
+`database` driver if you need exact historical aggregation.
 
 ### Commands
 
