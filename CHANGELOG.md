@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.7)
+## Unreleased (0.4.8)
+
+### Docs
+- Added dashboard screenshots (overview, budgets, calls, run trace) to the README.
+
+## 0.4.7
 
 ### Changed
 - **1.0 hardening**: `composer.json` now declares a `homepage` and a `support` (issues/source) block that Packagist surfaces.
