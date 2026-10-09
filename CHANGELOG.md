@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased (0.4.3)
+## Unreleased (0.4.4)
+
+### Added
+- **Call-log export** (CSV / JSON): the dashboard **Calls** page gains CSV / JSON download buttons that export exactly what the current filters show, and a new **`ai-meter:export`** command does the same on the CLI (to a file or stdout) with `--provider` / `--model` / `--status` / `--scope-type` / `--scope-id` / `--since` / `--until` filters. Metadata columns are always included; prompt/response text and `properties` are added only with `--with-io` (or `?io=1`). Exports stream row-by-row, so large call logs stay within memory. Backed by a shared `CallLogExporter` that the Calls listing now reuses for its filtering.
+
+## 0.4.3
 
 ### Added
 - **`ai-meter:update-prices` command**: refresh the price book from a source (a URL or local JSON file, defaulting to the package's maintained book) into an app-owned file, so token costs stay current without upgrading the package. Merges by default (`--replace` to overwrite), with `--dry-run`, `--source` and `--path` options and a "N new, M changed" summary. A new `pricing.prices_path` is loaded **above** the bundled, install-frozen table but **below** explicit `pricing.prices` overrides, so a refresh never clobbers custom prices.

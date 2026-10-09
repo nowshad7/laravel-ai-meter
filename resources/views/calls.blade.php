@@ -9,7 +9,16 @@
 @endphp
 
 @section('content')
-    <h1 class="mb-6 text-2xl font-bold tracking-tight">{{ __('ai-meter::messages.calls') }}</h1>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-2xl font-bold tracking-tight">{{ __('ai-meter::messages.calls') }}</h1>
+        <div class="flex items-center gap-2 text-sm">
+            <span class="text-slate-500 dark:text-slate-400">{{ __('ai-meter::messages.export') }}:</span>
+            <a href="{{ route('ai-meter.calls.export', array_merge($filters, ['format' => 'csv'])) }}"
+               class="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">{{ __('ai-meter::messages.export_csv') }}</a>
+            <a href="{{ route('ai-meter.calls.export', array_merge($filters, ['format' => 'json'])) }}"
+               class="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">{{ __('ai-meter::messages.export_json') }}</a>
+        </div>
+    </div>
 
     <form method="GET" class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="{{ __('ai-meter::messages.search') }}" class="{{ $input }}">

@@ -5,9 +5,11 @@ namespace Nsd7\AiMeter\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Routing\Controller;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Nsd7\AiMeter\Core\Budget\Budget;
 use Nsd7\AiMeter\Core\Budget\BudgetScope;
 use Nsd7\AiMeter\Core\Budget\Period;
+use Nsd7\AiMeter\Export\CallLogExporter;
 use Nsd7\AiMeter\Meter;
 use Nsd7\AiMeter\Models\AiMeterCall;
 use Nsd7\AiMeter\Models\AiMeterRun;
@@ -85,19 +87,8 @@ class DashboardController extends Controller
 
     public function calls(Request $request)
     {
-        $perPage = (int) config('ai-meter.per_page', 25);
-
-        $calls = AiMeterCall::query()
-            ->when($request->query('provider'), fn ($q, $v) => $q->where('provider', $v))
-            ->when($request->query('model'), fn ($q, $v) => $q->where('model', $v))
-            ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
-            ->when($request->query('scope_type'), fn ($q, $v) => $q->where('scope_type', $v))
-            ->when($request->query('scope_id'), fn ($q, $v) => $q->where('scope_id', $v))
-            ->when($request->query('search'), fn ($q, $v) => $q->where(function ($q) use ($v) {
-                $q->where('model', 'like', "%{$v}%")->orWhere('provider', 'like', "%{$v}%");
-            }))
-            ->orderByDesc('id')
-            ->paginate($perPage)
+        $calls = (new CallLogExporter())->query($request->query())
+            ->paginate((int) config('ai-meter.per_page', 25))
             ->withQueryString();
 
         return view('ai-meter::calls', [
@@ -106,6 +97,26 @@ class DashboardController extends Controller
             'models' => $this->distinct('model'),
             'filters' => $request->query(),
             'currency' => (string) config('ai-meter.pricing.currency', 'USD'),
+        ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $format = $request->query('format') === 'json' ? 'json' : 'csv';
+        $withIo = $request->boolean('io');
+
+        $exporter = new CallLogExporter();
+        $query = $exporter->query($request->query());
+        $chunks = $format === 'json' ? $exporter->json($query, $withIo) : $exporter->csv($query, $withIo);
+
+        $filename = 'ai-meter-calls-' . now()->format('Ymd-His') . '.' . $format;
+
+        return response()->streamDownload(function () use ($chunks) {
+            foreach ($chunks as $chunk) {
+                echo $chunk;
+            }
+        }, $filename, [
+            'Content-Type' => $format === 'json' ? 'application/json' : 'text/csv; charset=UTF-8',
         ]);
     }
 

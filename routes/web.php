@@ -15,6 +15,7 @@ Route::group([
         Route::get('/', [DashboardController::class, 'overview'])->name('overview');
         Route::get('/budgets', [DashboardController::class, 'budgets'])->name('budgets');
         Route::get('/calls', [DashboardController::class, 'calls'])->name('calls');
+        Route::get('/calls/export', [DashboardController::class, 'export'])->name('calls.export');
         Route::get('/calls/{call}', [DashboardController::class, 'show'])->whereNumber('call')->name('calls.show');
         Route::get('/runs', [DashboardController::class, 'runs'])->name('runs');
         Route::get('/runs/{run}', [DashboardController::class, 'runShow'])->whereNumber('run')->name('runs.show');

@@ -253,7 +253,22 @@ Key options in `config/ai-meter.php`:
 ```bash
 php artisan ai-meter:prune            # delete call records older than prune.keep_days
 php artisan ai-meter:update-prices    # refresh the price book so token costs don't drift
+php artisan ai-meter:export           # export the (filtered) call log as CSV or JSON
 ```
+
+**Export the call log.** The dashboard's **Calls** page has CSV / JSON buttons
+that export exactly what the current filters show. The same is available on the
+CLI, with filters and a date window:
+
+```bash
+php artisan ai-meter:export --format=json --output=storage/app/calls.json
+php artisan ai-meter:export --provider=openai --since=2024-06-01 --until=2024-06-30 --output=june.csv
+php artisan ai-meter:export --with-io > calls.csv   # include prompt/response + properties
+```
+
+Without `--output` it writes to stdout. Metadata columns (tokens, cost, scope,
+latency, trace/run ids, …) are always included; the prompt/response text and
+`properties` are added only with `--with-io` (or `?io=1` on the dashboard link).
 
 **Keep prices current without upgrading the package.** `ai-meter:update-prices`
 fetches a price book (the package's maintained one by default, or any
