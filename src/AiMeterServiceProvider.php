@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Nsd7\AiMeter\Adapters\LaravelAiListener;
 use Nsd7\AiMeter\Budget\BudgetAlerter;
 use Nsd7\AiMeter\Budget\DatabaseSpendStore;
+use Nsd7\AiMeter\Console\ExportCallsCommand;
 use Nsd7\AiMeter\Console\PruneCommand;
 use Nsd7\AiMeter\Console\UpdatePricesCommand;
 use Nsd7\AiMeter\Core\Contracts\PriceProvider;
@@ -62,7 +63,7 @@ class AiMeterServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PruneCommand::class, UpdatePricesCommand::class]);
+            $this->commands([PruneCommand::class, UpdatePricesCommand::class, ExportCallsCommand::class]);
 
             $this->publishes([
                 __DIR__ . '/../config/ai-meter.php' => config_path('ai-meter.php'),
