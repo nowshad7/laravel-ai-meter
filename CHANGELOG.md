@@ -3,7 +3,7 @@
 ## Unreleased (0.4.7)
 
 ### Changed
-- **1.0 hardening**: `composer.json` now declares `minimum-stability: stable`, a `homepage`, and a `support` (issues/source) block.
+- **1.0 hardening**: `composer.json` now declares a `homepage` and a `support` (issues/source) block that Packagist surfaces.
 
 ### Tests
 - Added coverage for the `ai-meter:prune` command (retention window, `--days` override, retention disabled) and for display-currency conversion (`pricing.fx_rate` as a numeric rate and as a callable), closing two gaps ahead of 1.0. Suite now at 103 tests.
